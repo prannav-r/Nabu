@@ -1,12 +1,61 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/offline_indicator.dart';
+import '../../data/local/models/progress.dart';
+import '../../data/local/models/quiz.dart';
+import '../../data/local/repositories/progress_repository.dart';
+import '../../data/local/repositories/quiz_repository.dart';
 
-class ProgressScreen extends StatelessWidget {
+class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
 
   @override
+  State<ProgressScreen> createState() => _ProgressScreenState();
+}
+
+class _ProgressScreenState extends State<ProgressScreen> {
+  final ProgressRepository _progressRepo = ProgressRepository();
+  final QuizRepository _quizRepo = QuizRepository();
+
+  StudentProgress? _progress;
+  List<QuizAttempt> _attempts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final prog = await _progressRepo.recalculateAndSave('student_1');
+      final atts = await _quizRepo.getAttemptsForStudent('student_1');
+
+      setState(() {
+        _progress = prog;
+        _attempts = atts;
+      });
+    } catch (_) {
+      // Fallback offline
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final hasPendingSync = _attempts.any((a) => a.syncStatus == 'pending') ||
+        (_progress?.syncStatus == 'pending');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Progress'),
@@ -19,41 +68,52 @@ class ProgressScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildSummaryCard(),
-          const SizedBox(height: 16),
-          const Text(
-            'Recent Quiz Scores',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadProgress,
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  _buildSummaryCard(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Recent Quiz Scores',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_attempts.isEmpty)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'No quiz attempts yet. Complete a quiz to track your scores offline!',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ..._attempts.map((a) => _buildScoreItem(a)),
+                  const SizedBox(height: 16),
+                  _buildSyncStatusCard(hasPendingSync),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          _buildScoreItem(
-            quizTitle: 'Plant Biology Quiz',
-            score: '4 / 5 (80%)',
-            date: 'Today',
-            isSynced: false,
-          ),
-          const SizedBox(height: 8),
-          _buildScoreItem(
-            quizTitle: 'Introduction to Science Quiz',
-            score: '5 / 5 (100%)',
-            date: 'Yesterday',
-            isSynced: true,
-          ),
-          const SizedBox(height: 16),
-          _buildSyncStatusCard(),
-        ],
-      ),
     );
   }
 
   Widget _buildSummaryCard() {
+    final completed = _progress?.lessonsCompleted ?? 0;
+    final total = _progress?.totalLessons ?? 4;
+    final avgScore = _progress?.averageScore ?? 0.0;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -74,7 +134,7 @@ class ProgressScreen extends StatelessWidget {
                 Expanded(
                   child: _buildMetricTile(
                     title: 'Lessons Completed',
-                    value: '1 / 4',
+                    value: '$completed / $total',
                     icon: Icons.check_circle_outline,
                   ),
                 ),
@@ -82,7 +142,7 @@ class ProgressScreen extends StatelessWidget {
                 Expanded(
                   child: _buildMetricTile(
                     title: 'Average Score',
-                    value: '90%',
+                    value: '${avgScore.toStringAsFixed(0)}%',
                     icon: Icons.star_outline,
                   ),
                 ),
@@ -132,16 +192,15 @@ class ProgressScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreItem({
-    required String quizTitle,
-    required String score,
-    required String date,
-    required bool isSynced,
-  }) {
+  Widget _buildScoreItem(QuizAttempt attempt) {
+    final isSynced = attempt.syncStatus == 'synced';
+    final percentage = (attempt.score / (attempt.totalQuestions > 0 ? attempt.totalQuestions : 1)) * 100;
+
     return Card(
+      margin: const EdgeInsets.only(bottom: 8.0),
       child: ListTile(
         title: Text(
-          quizTitle,
+          'Quiz: ${attempt.lessonId.replaceAll("_", " ").toUpperCase()}',
           style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -149,16 +208,16 @@ class ProgressScreen extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '$date • ${isSynced ? "Synced" : "Stored locally (pending sync)"}',
+          isSynced ? "Synced with server" : "Stored locally (pending sync)",
           style: TextStyle(
             fontSize: 12,
             color: isSynced ? AppColors.textSecondary : AppColors.warning,
           ),
         ),
         trailing: Text(
-          score,
+          '${attempt.score}/${attempt.totalQuestions} (${percentage.toStringAsFixed(0)}%)',
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
             color: AppColors.primary,
           ),
@@ -167,19 +226,22 @@ class ProgressScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSyncStatusCard() {
+  Widget _buildSyncStatusCard(bool hasPendingSync) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            const Icon(Icons.sync, color: AppColors.textSecondary),
+            Icon(
+              hasPendingSync ? Icons.sync_problem : Icons.sync,
+              color: hasPendingSync ? AppColors.warning : AppColors.textSecondary,
+            ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Synchronization State',
                     style: TextStyle(
                       fontSize: 14,
@@ -187,10 +249,12 @@ class ProgressScreen extends StatelessWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    '1 attempt pending sync. Will automatically sync when online.',
-                    style: TextStyle(
+                    hasPendingSync
+                        ? 'Pending records stored locally. Will synchronize automatically when connectivity is restored.'
+                        : 'All local progress is synchronized.',
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                     ),

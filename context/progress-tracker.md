@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 02 completed; Unit 03 (Offline Lessons and Progress) next up.
+- Unit 03 completed; Unit 04 (Offline ONNX Tutor) next up.
 
 ## Current Goal
 
@@ -19,6 +19,7 @@ Update this file after every meaningful implementation change.
 - [x] Build order defined.
 - [x] Unit 01: Flutter application shell, theme, navigation, and placeholder screens.
 - [x] Unit 02: Local SQLite Database schema, seed data, models, and repository layer.
+- [x] Unit 03: Offline Lessons and Progress (Local lesson browsing, lesson detail view, offline completion toggling, and local progress calculation).
 
 ## In Progress
 
@@ -26,7 +27,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Unit 03: Offline Lessons and Progress (Local lesson list, lesson detail screen, mark lesson complete, store completion locally, display progress).
+- Unit 04: Offline ONNX Tutor (Local ONNX model loading, question preprocessing, local inference service, and tutor interaction screen).
 
 ## Open Questions
 
