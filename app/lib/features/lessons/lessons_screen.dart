@@ -34,6 +34,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
     });
     try {
       final lessons = await _lessonRepo.getAllLessons();
+      if (!mounted) return;
       setState(() {
         _lessons = lessons;
       });
