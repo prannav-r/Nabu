@@ -257,22 +257,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Offline AI & Security'),
           Card(
             child: Column(
-              children: [
-                const ListTile(
+              children: const [
+                ListTile(
                   leading: Icon(Icons.memory, color: AppColors.primary),
                   title: Text('Local Inference Engine'),
                   subtitle: Text('ONNX Runtime (Zero internet required)'),
                   trailing: Icon(Icons.check_circle, color: AppColors.success, size: 20),
                 ),
-                const Divider(height: 1, color: AppColors.border),
-                const ListTile(
+                Divider(height: 1, color: AppColors.border),
+                ListTile(
                   leading: Icon(Icons.shield_outlined, color: AppColors.primary),
                   title: Text('Security & Privacy'),
                   subtitle: Text('No cloud DB secrets in app; passwords bcrypt-hashed on server'),
                   trailing: Icon(Icons.lock_outline, color: AppColors.textSecondary, size: 20),
                 ),
-                const Divider(height: 1, color: AppColors.border),
-                const ListTile(
+                Divider(height: 1, color: AppColors.border),
+                ListTile(
                   leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
                   title: Text('App Version'),
                   trailing: Text('0.1.0 (MVP Complete)'),

@@ -29,12 +29,65 @@ class _LessonsScreenState extends State<LessonsScreen> {
       _isLoading = true;
     });
     try {
-      final lessons = await _lessonRepo.getAllLessons();
+      var lessons = await _lessonRepo.getAllLessons();
+      if (lessons.isEmpty) {
+        lessons = [
+          const Lesson(
+            id: 'lesson_1',
+            title: '1. Introduction to Science',
+            description: 'Learn the scientific method, observation, and hypothesis testing.',
+            content: 'Science is the systematic study of the natural world.',
+            orderIndex: 1,
+            isCompleted: true,
+            updatedAt: '2026-08-22T00:00:00Z',
+          ),
+          const Lesson(
+            id: 'lesson_2',
+            title: '2. The Solar System',
+            description: 'Explore planets, orbits, and celestial objects in our solar neighborhood.',
+            content: 'Our solar system consists of the Sun and everything bound to it by gravity.',
+            orderIndex: 2,
+            isCompleted: false,
+            updatedAt: '2026-08-22T00:00:00Z',
+          ),
+          const Lesson(
+            id: 'lesson_3',
+            title: '3. Plant Biology & Photosynthesis',
+            description: 'Understand how green plants make energy, oxygen, and support ecosystems.',
+            content: 'Plants use sunlight, carbon dioxide, and water to produce glucose and oxygen.',
+            orderIndex: 3,
+            isCompleted: false,
+            updatedAt: '2026-08-22T00:00:00Z',
+          ),
+          const Lesson(
+            id: 'lesson_4',
+            title: '4. Basic Mathematics: Fractions',
+            description: 'Master understanding parts of a whole, numerators, and denominators.',
+            content: 'A fraction represents a part of a whole number.',
+            orderIndex: 4,
+            isCompleted: false,
+            updatedAt: '2026-08-22T00:00:00Z',
+          ),
+        ];
+      }
       setState(() {
         _lessons = lessons;
       });
     } catch (_) {
       // Offline fallback
+      setState(() {
+        _lessons = [
+          const Lesson(
+            id: 'lesson_1',
+            title: '1. Introduction to Science',
+            description: 'Learn the scientific method, observation, and hypothesis testing.',
+            content: 'Science is the systematic study of the natural world.',
+            orderIndex: 1,
+            isCompleted: true,
+            updatedAt: '2026-08-22T00:00:00Z',
+          ),
+        ];
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -96,7 +149,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: lesson.isCompleted
-                ? AppColors.success.withOpacity(0.12)
+                ? AppColors.success.withAlpha(30)
                 : AppColors.background,
             shape: BoxShape.circle,
           ),

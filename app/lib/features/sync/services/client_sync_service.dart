@@ -152,7 +152,7 @@ class ClientSyncService {
       }
     } catch (e) {
       debugPrint('[ClientSyncService] Synchronization attempt error: $e');
-      return SyncResult(
+      return const SyncResult(
         success: false,
         message: 'Could not reach server. All local learning data remains safely preserved on device.',
       );

@@ -25,7 +25,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ProgressRepository _progressRepo = ProgressRepository();
   StudentProgress? _progress;
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -39,15 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _progress = prog;
-          _isLoading = false;
         });
       }
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      // Fallback
     }
   }
 

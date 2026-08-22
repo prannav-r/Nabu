@@ -174,7 +174,14 @@ class _QuizScreenState extends State<QuizScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _isFinished
               ? _buildResultView()
-              : _buildQuizView(),
+              : (_questions.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No questions available.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    )
+                  : _buildQuizView()),
     );
   }
 
@@ -282,7 +289,7 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Container(
         padding: const EdgeInsets.all(14.0),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.08) : AppColors.surface,
+          color: isSelected ? AppColors.primary.withAlpha(20) : AppColors.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
@@ -339,8 +346,8 @@ class _QuizScreenState extends State<QuizScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: isPassed
-                    ? AppColors.success.withOpacity(0.1)
-                    : AppColors.warning.withOpacity(0.1),
+                    ? AppColors.success.withAlpha(25)
+                    : AppColors.warning.withAlpha(25),
                 shape: BoxShape.circle,
               ),
               child: Icon(
