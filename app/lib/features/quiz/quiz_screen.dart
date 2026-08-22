@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/offline_indicator.dart';
+import '../../data/local/models/lesson.dart';
 import '../../data/local/models/quiz.dart';
+import '../../data/local/repositories/lesson_repository.dart';
 import '../../data/local/repositories/progress_repository.dart';
 import '../../data/local/repositories/quiz_repository.dart';
 
@@ -16,14 +18,18 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   final QuizRepository _quizRepo = QuizRepository();
+  final LessonRepository _lessonRepo = LessonRepository();
   final ProgressRepository _progressRepo = ProgressRepository();
 
+  List<Lesson> _availableLessons = [];
+  String? _selectedLessonId;
   List<QuizQuestion> _questions = [];
   int _currentQuestionIndex = 0;
   int? _selectedOptionIndex;
   final Map<int, int> _userAnswers = {}; // questionIndex -> selectedOptionIndex
 
   bool _isLoading = true;
+  bool _isQuizActive = false;
   bool _isFinished = false;
   int _score = 0;
   bool _isSaving = false;
@@ -31,12 +37,32 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    _loadQuestions();
+    _selectedLessonId = widget.initialLessonId;
+    _initQuizScreen();
   }
 
-  Future<void> _loadQuestions() async {
+  Future<void> _initQuizScreen() async {
     setState(() {
       _isLoading = true;
+    });
+
+    final lessons = await _lessonRepo.getAllLessons();
+
+    setState(() {
+      _availableLessons = lessons;
+      _isLoading = false;
+    });
+
+    if (_selectedLessonId != null) {
+      await _startQuizForLesson(_selectedLessonId);
+    }
+  }
+
+  Future<void> _startQuizForLesson(String? lessonId) async {
+    setState(() {
+      _isLoading = true;
+      _selectedLessonId = lessonId;
+      _isQuizActive = true;
       _isFinished = false;
       _currentQuestionIndex = 0;
       _selectedOptionIndex = null;
@@ -44,60 +70,19 @@ class _QuizScreenState extends State<QuizScreen> {
       _score = 0;
     });
 
-    try {
-      List<QuizQuestion> loaded;
-      if (widget.initialLessonId != null) {
-        loaded = await _quizRepo.getQuestionsForLesson(widget.initialLessonId!);
-      } else {
-        loaded = await _quizRepo.getAllQuestions();
-      }
-
-      if (loaded.isEmpty) {
-        // Fallback default questions if DB was empty
-        loaded = [
-          const QuizQuestion(
-            id: 'q_fb_1',
-            lessonId: 'lesson_1',
-            questionText: 'What is the first step in the scientific method?',
-            options: ['Hypothesis', 'Observation', 'Conclusion', 'Experiment'],
-            correctOptionIndex: 1,
-          ),
-          const QuizQuestion(
-            id: 'q_fb_2',
-            lessonId: 'lesson_2',
-            questionText: 'Which planet is known as the Red Planet?',
-            options: ['Venus', 'Mars', 'Jupiter', 'Mercury'],
-            correctOptionIndex: 1,
-          ),
-          const QuizQuestion(
-            id: 'q_fb_3',
-            lessonId: 'lesson_3',
-            questionText: 'What gas do green plants produce during photosynthesis?',
-            options: ['Carbon Dioxide', 'Nitrogen', 'Oxygen', 'Hydrogen'],
-            correctOptionIndex: 2,
-          ),
-          const QuizQuestion(
-            id: 'q_fb_4',
-            lessonId: 'lesson_4',
-            questionText: 'In the fraction 3/5, what is the top number 3 called?',
-            options: ['Denominator', 'Numerator', 'Quotient', 'Factor'],
-            correctOptionIndex: 1,
-          ),
-        ];
-      }
-
-      setState(() {
-        _questions = loaded;
-      });
-    } catch (_) {
-      // Fallback
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    List<QuizQuestion> loaded = [];
+    if (lessonId != null) {
+      loaded = await _quizRepo.getQuestionsForLesson(lessonId);
     }
+
+    if (loaded.isEmpty) {
+      loaded = await _quizRepo.getAllQuestions();
+    }
+
+    setState(() {
+      _questions = loaded;
+      _isLoading = false;
+    });
   }
 
   void _onOptionSelected(int optionIndex) {
@@ -132,19 +117,15 @@ class _QuizScreenState extends State<QuizScreen> {
       final attempt = QuizAttempt(
         id: 'attempt_${DateTime.now().millisecondsSinceEpoch}',
         studentId: 'student_1',
-        lessonId: widget.initialLessonId ?? 'all_lessons',
+        lessonId: _selectedLessonId ?? 'all_topics',
         score: calculatedScore,
         totalQuestions: _questions.length,
         completedAt: now,
         syncStatus: 'pending',
       );
 
-      try {
-        await _quizRepo.recordAttempt(attempt);
-        await _progressRepo.recalculateAndSave('student_1');
-      } catch (e) {
-        debugPrint('Error saving quiz attempt locally: $e');
-      }
+      await _quizRepo.recordAttempt(attempt);
+      await _progressRepo.recalculateAndSave('student_1');
 
       if (mounted) {
         setState(() {
@@ -156,11 +137,27 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  void _exitQuizToSelector() {
+    setState(() {
+      _isQuizActive = false;
+      _isFinished = false;
+      _selectedLessonId = null;
+      _questions.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Offline Quiz'),
+        title: Text(_isQuizActive ? 'Interactive Quiz' : 'Offline Quizzes'),
+        leading: _isQuizActive
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back to Quiz List',
+                onPressed: _exitQuizToSelector,
+              )
+            : null,
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
@@ -172,16 +169,122 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _isFinished
-              ? _buildResultView()
-              : (_questions.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No questions available.',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
-                    )
-                  : _buildQuizView()),
+          : !_isQuizActive
+              ? _buildQuizSelectionView()
+              : _isFinished
+                  ? _buildResultView()
+                  : _questions.isEmpty
+                      ? _buildNoQuestionsView()
+                      : _buildQuizView(),
+    );
+  }
+
+  Widget _buildQuizSelectionView() {
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        Card(
+          color: AppColors.primary.withAlpha(15),
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(color: AppColors.primary, width: 1.5),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16.0),
+            leading: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.stars_rounded, color: Colors.white, size: 28),
+            ),
+            title: const Text(
+              'Comprehensive Practice Quiz',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            subtitle: const Padding(
+              padding: EdgeInsets.only(top: 4.0),
+              child: Text(
+                'Test your knowledge across all available lessons and topics in a combined quiz.',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+            ),
+            trailing: const Icon(Icons.play_circle_fill, color: AppColors.primary, size: 32),
+            onTap: () => _startQuizForLesson(null),
+          ),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'Select a Topic Quiz',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (_availableLessons.isEmpty)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('No topic quizzes found. Generate topics from the Lessons tab.'),
+            ),
+          )
+        else
+          ..._availableLessons.map((l) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10.0),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: AppColors.background,
+                  child: Icon(Icons.quiz_outlined, color: AppColors.primary, size: 20),
+                ),
+                title: Text(
+                  l.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                ),
+                subtitle: Text(
+                  l.isCompleted ? '✓ Lesson Completed' : 'Study & Test',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: l.isCompleted ? AppColors.success : AppColors.textSecondary,
+                  ),
+                ),
+                trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                onTap: () => _startQuizForLesson(l.id),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildNoQuestionsView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.quiz_outlined, size: 48, color: AppColors.textSecondary),
+            const SizedBox(height: 12),
+            const Text(
+              'No practice questions found for this topic yet.',
+              style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _exitQuizToSelector,
+              child: const Text('Return to Quiz List'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -266,8 +369,8 @@ class _QuizScreenState extends State<QuizScreen> {
                     )
                   : Text(
                       _currentQuestionIndex == _questions.length - 1
-                          ? 'Submit Quiz'
-                          : 'Next Question',
+                          ? 'Submit Quiz ✓'
+                          : 'Next Question →',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
@@ -345,9 +448,7 @@ class _QuizScreenState extends State<QuizScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isPassed
-                    ? AppColors.success.withAlpha(25)
-                    : AppColors.warning.withAlpha(25),
+                color: isPassed ? AppColors.success.withAlpha(25) : AppColors.warning.withAlpha(25),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -358,7 +459,7 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              isPassed ? 'Great Job!' : 'Keep Practicing!',
+              isPassed ? '🎉 Great Job!' : 'Keep Practicing!',
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -387,7 +488,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   Icon(Icons.save_outlined, color: AppColors.success, size: 18),
                   SizedBox(width: 8),
                   Text(
-                    'Score saved locally & queued for sync.',
+                    'Score recorded locally & queued for sync.',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -398,23 +499,32 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loadQuestions,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _startQuizForLesson(_selectedLessonId),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Retake Quiz', style: TextStyle(fontSize: 15)),
                   ),
                 ),
-                child: const Text(
-                  'Retake Quiz',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _exitQuizToSelector,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Choose Quiz', style: TextStyle(fontSize: 15)),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

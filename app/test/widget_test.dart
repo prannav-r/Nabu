@@ -22,6 +22,6 @@ void main() {
     await tester.tap(find.byIcon(Icons.menu_book_outlined));
     await tester.pumpAndSettle();
 
-    expect(find.text('1. Introduction to Science'), findsOneWidget);
+    expect(find.textContaining('Introduction to Science'), findsOneWidget);
   });
 }

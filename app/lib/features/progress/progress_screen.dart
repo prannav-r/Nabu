@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/offline_indicator.dart';
+import '../../data/local/models/lesson.dart';
 import '../../data/local/models/progress.dart';
 import '../../data/local/models/quiz.dart';
+import '../../data/local/repositories/lesson_repository.dart';
 import '../../data/local/repositories/progress_repository.dart';
 import '../../data/local/repositories/quiz_repository.dart';
 import '../sync/services/client_sync_service.dart';
@@ -17,9 +19,11 @@ class ProgressScreen extends StatefulWidget {
 class _ProgressScreenState extends State<ProgressScreen> {
   final ProgressRepository _progressRepo = ProgressRepository();
   final QuizRepository _quizRepo = QuizRepository();
+  final LessonRepository _lessonRepo = LessonRepository();
   final ClientSyncService _syncService = ClientSyncService();
 
   StudentProgress? _progress;
+  List<Lesson> _lessons = [];
   List<QuizAttempt> _attempts = [];
   bool _isLoading = true;
   bool _isSyncing = false;
@@ -37,10 +41,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     try {
       final prog = await _progressRepo.recalculateAndSave('student_1');
+      final lessons = await _lessonRepo.getAllLessons();
       final atts = await _quizRepo.getAttemptsForStudent('student_1');
 
       setState(() {
         _progress = prog;
+        _lessons = lessons;
         _attempts = atts;
       });
     } catch (_) {
@@ -74,7 +80,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ),
       );
 
-      // Refresh progress and attempts state
       await _loadProgress();
     }
   }
@@ -93,7 +98,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Progress'),
+        title: const Text('My Learning Progress'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -110,44 +115,24 @@ class _ProgressScreenState extends State<ProgressScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  _buildSummaryCard(),
+                  _buildSummaryHeroCard(),
                   const SizedBox(height: 16),
-                  _buildSyncStatusCard(hasPendingSync),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Recent Quiz Scores',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (_attempts.isEmpty)
-                    const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'No quiz attempts yet. Complete a quiz to track your scores offline!',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    ..._attempts.map((a) => _buildScoreItem(a)),
+                  _buildSyncCard(hasPendingSync),
+                  const SizedBox(height: 20),
+                  _buildTopicBreakdownSection(),
+                  const SizedBox(height: 20),
+                  _buildRecentQuizScoresSection(),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryHeroCard() {
     final completed = _progress?.lessonsCompleted ?? 0;
-    final total = _progress?.totalLessons ?? 4;
+    final total = _progress?.totalLessons ?? (_lessons.isNotEmpty ? _lessons.length : 4);
     final avgScore = _progress?.averageScore ?? 0.0;
+    final progressFraction = total > 0 ? (completed / total).clamp(0.0, 1.0) : 0.0;
 
     return Card(
       child: Padding(
@@ -155,21 +140,45 @@ class _ProgressScreenState extends State<ProgressScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Overall Learning Progress',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Curriculum Mastery',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  '${(progressFraction * 100).toInt()}% Done',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progressFraction,
+                minHeight: 8,
+                backgroundColor: AppColors.border,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: _buildMetricTile(
-                    title: 'Lessons Completed',
+                    title: 'Completed',
                     value: '$completed / $total',
+                    subtitle: 'Lessons',
                     icon: Icons.check_circle_outline,
                   ),
                 ),
@@ -178,7 +187,17 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   child: _buildMetricTile(
                     title: 'Average Score',
                     value: '${avgScore.toStringAsFixed(0)}%',
+                    subtitle: 'From quizzes',
                     icon: Icons.star_outline,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildMetricTile(
+                    title: 'Quizzes Taken',
+                    value: '${_attempts.length}',
+                    subtitle: 'Attempts',
+                    icon: Icons.assignment_turned_in_outlined,
                   ),
                 ),
               ],
@@ -192,6 +211,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Widget _buildMetricTile({
     required String title,
     required String value,
+    required String subtitle,
     required IconData icon,
   }) {
     return Container(
@@ -204,12 +224,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primary, size: 20),
-          const SizedBox(height: 8),
+          Icon(icon, color: AppColors.primary, size: 18),
+          const SizedBox(height: 6),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
@@ -218,8 +238,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -227,102 +248,170 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  Widget _buildScoreItem(QuizAttempt attempt) {
-    final isSynced = attempt.syncStatus == 'synced';
-    final percentage = (attempt.score / (attempt.totalQuestions > 0 ? attempt.totalQuestions : 1)) * 100;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        title: Text(
-          'Quiz: ${attempt.lessonId.replaceAll("_", " ").toUpperCase()}',
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
+  Widget _buildTopicBreakdownSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Topic Completion Status',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        subtitle: Text(
-          isSynced ? "Synced with server" : "Stored locally (pending sync)",
-          style: TextStyle(
-            fontSize: 12,
-            color: isSynced ? AppColors.textSecondary : AppColors.warning,
-          ),
-        ),
-        trailing: Text(
-          '${attempt.score}/${attempt.totalQuestions} (${percentage.toStringAsFixed(0)}%)',
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-      ),
+        const SizedBox(height: 8),
+        ..._lessons.map((lesson) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8.0),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              leading: Icon(
+                lesson.isCompleted ? Icons.check_circle : Icons.circle_outlined,
+                color: lesson.isCompleted ? AppColors.success : AppColors.textSecondary,
+                size: 22,
+              ),
+              title: Text(
+                lesson.title,
+                style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: lesson.isCompleted
+                      ? AppColors.success.withAlpha(20)
+                      : AppColors.background,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: lesson.isCompleted ? AppColors.success : AppColors.border,
+                  ),
+                ),
+                child: Text(
+                  lesson.isCompleted ? 'Completed' : 'Pending',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: lesson.isCompleted ? AppColors.success : AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
-  Widget _buildSyncStatusCard(bool hasPendingSync) {
+  Widget _buildRecentQuizScoresSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Recent Quiz Activity',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (_attempts.isEmpty)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'No quiz attempts recorded yet. Start any quiz to track your mastery offline!',
+                style: TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
+              ),
+            ),
+          )
+        else
+          ..._attempts.map((attempt) {
+            final percentage = (attempt.score / (attempt.totalQuestions > 0 ? attempt.totalQuestions : 1)) * 100;
+            final isPassed = percentage >= 60;
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8.0),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: isPassed ? AppColors.success.withAlpha(20) : AppColors.warning.withAlpha(20),
+                  child: Icon(
+                    isPassed ? Icons.check : Icons.refresh,
+                    color: isPassed ? AppColors.success : AppColors.warning,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  attempt.lessonId.replaceAll('lesson_', 'Lesson ').replaceAll('_', ' ').toUpperCase(),
+                  style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  attempt.syncStatus == 'synced' ? '✓ Synced' : '• Saved locally (offline)',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: attempt.syncStatus == 'synced' ? AppColors.textSecondary : AppColors.warning,
+                  ),
+                ),
+                trailing: Text(
+                  '${attempt.score}/${attempt.totalQuestions} (${percentage.toStringAsFixed(0)}%)',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isPassed ? AppColors.primary : AppColors.warning,
+                  ),
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildSyncCard(bool hasPendingSync) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(14.0),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(
-                  hasPendingSync ? Icons.cloud_queue_rounded : Icons.cloud_done_rounded,
-                  color: hasPendingSync ? AppColors.warning : AppColors.success,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Cloud Synchronization',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        hasPendingSync
-                            ? 'Pending records stored safely on device. Tap sync when connected to internet.'
-                            : 'All local learning progress is fully synchronized.',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            Icon(
+              hasPendingSync ? Icons.cloud_queue_rounded : Icons.cloud_done_rounded,
+              color: hasPendingSync ? AppColors.warning : AppColors.success,
+              size: 26,
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isSyncing ? null : _triggerManualSync,
-                icon: _isSyncing
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.sync_rounded, size: 18),
-                label: Text(_isSyncing ? 'Syncing...' : 'Sync Now with Cloud'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Cloud Synchronization',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hasPendingSync
+                        ? 'Pending changes saved locally.'
+                        : 'All progress is fully synchronized.',
+                    style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _isSyncing ? null : _triggerManualSync,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              ),
+              child: Text(
+                _isSyncing ? 'Syncing...' : 'Sync',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
             ),
           ],

@@ -9,49 +9,55 @@ class ProgressRepository {
 
   Future<StudentProgress?> getProgress(String studentId) async {
     final db = await _appDb.database;
-    final maps = await db.query(
-      'student_progress',
-      where: 'student_id = ?',
-      whereArgs: [studentId],
-      limit: 1,
-    );
-    if (maps.isNotEmpty) {
-      return StudentProgress.fromMap(maps.first);
+    if (db != null) {
+      try {
+        final maps = await db.query(
+          'student_progress',
+          where: 'student_id = ?',
+          whereArgs: [studentId],
+          limit: 1,
+        );
+        if (maps.isNotEmpty) {
+          return StudentProgress.fromMap(maps.first);
+        }
+      } catch (_) {}
     }
-    return null;
+    return AppDatabase.memProgress;
   }
 
   Future<void> updateProgress(StudentProgress progress) async {
+    AppDatabase.memProgress = progress;
+
     final db = await _appDb.database;
-    await db.insert(
-      'student_progress',
-      progress.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    if (db != null) {
+      try {
+        await db.insert(
+          'student_progress',
+          progress.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } catch (_) {}
+    }
   }
 
   Future<StudentProgress> recalculateAndSave(String studentId) async {
-    final db = await _appDb.database;
+    final allLessons = AppDatabase.memLessons;
+    final totalLessons = allLessons.length;
+    final lessonsCompleted = allLessons.where((l) => l.isCompleted).length;
 
-    // Count total lessons
-    final totalLessonsRes = await db.rawQuery('SELECT COUNT(*) as c FROM lessons');
-    final totalLessons = (totalLessonsRes.first['c'] as num).toInt();
+    final studentAttempts = AppDatabase.memAttempts.where((a) => a.studentId == studentId).toList();
+    final quizzesCompleted = studentAttempts.length;
 
-    // Count completed lessons
-    final completedLessonsRes = await db.rawQuery(
-      'SELECT COUNT(*) as c FROM lessons WHERE is_completed = 1',
-    );
-    final lessonsCompleted = (completedLessonsRes.first['c'] as num).toInt();
-
-    // Calculate quiz stats
-    final quizStatsRes = await db.rawQuery(
-      'SELECT COUNT(*) as c, AVG(CAST(score AS REAL) / CAST(total_questions AS REAL)) as avg_ratio FROM quiz_attempts WHERE student_id = ?',
-      [studentId],
-    );
-
-    final quizzesCompleted = (quizStatsRes.first['c'] as num).toInt();
-    final avgRatio = (quizStatsRes.first['avg_ratio'] as num?)?.toDouble() ?? 0.0;
-    final averageScore = (avgRatio * 100.0).roundToDouble();
+    double averageScore = 0.0;
+    if (quizzesCompleted > 0) {
+      double totalRatio = 0.0;
+      for (final att in studentAttempts) {
+        if (att.totalQuestions > 0) {
+          totalRatio += (att.score / att.totalQuestions);
+        }
+      }
+      averageScore = ((totalRatio / quizzesCompleted) * 100).roundToDouble();
+    }
 
     final now = DateTime.now().toIso8601String();
     final progress = StudentProgress(

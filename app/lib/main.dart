@@ -37,10 +37,12 @@ class MainNavigationShell extends StatefulWidget {
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
   int _currentIndex = 0;
+  int _refreshCounter = 0;
 
   void _onTabSelected(int index) {
     setState(() {
       _currentIndex = index;
+      _refreshCounter++;
     });
   }
 
@@ -50,24 +52,53 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      HomeScreen(
-        onNavigateToLessons: () => _onTabSelected(1),
-        onNavigateToTutor: () => _onTabSelected(2),
-        onNavigateToQuiz: () => _onTabSelected(3),
-        onNavigateToSettings: _navigateToSettings,
-      ),
-      const LessonsScreen(),
-      const TutorScreen(),
-      const QuizScreen(),
-      const ProgressScreen(),
-    ];
+    Widget currentScreen;
+    switch (_currentIndex) {
+      case 0:
+        currentScreen = HomeScreen(
+          key: ValueKey('home_$_refreshCounter'),
+          onNavigateToLessons: () => _onTabSelected(1),
+          onNavigateToTutor: () => _onTabSelected(2),
+          onNavigateToQuiz: () => _onTabSelected(3),
+          onNavigateToSettings: _navigateToSettings,
+        );
+        break;
+      case 1:
+        currentScreen = LessonsScreen(
+          key: ValueKey('lessons_$_refreshCounter'),
+          onLessonUpdated: () {
+            setState(() {
+              _refreshCounter++;
+            });
+          },
+        );
+        break;
+      case 2:
+        currentScreen = TutorScreen(
+          key: ValueKey('tutor_$_refreshCounter'),
+        );
+        break;
+      case 3:
+        currentScreen = QuizScreen(
+          key: ValueKey('quiz_$_refreshCounter'),
+        );
+        break;
+      case 4:
+        currentScreen = ProgressScreen(
+          key: ValueKey('progress_$_refreshCounter'),
+        );
+        break;
+      default:
+        currentScreen = HomeScreen(
+          onNavigateToLessons: () => _onTabSelected(1),
+          onNavigateToTutor: () => _onTabSelected(2),
+          onNavigateToQuiz: () => _onTabSelected(3),
+          onNavigateToSettings: _navigateToSettings,
+        );
+    }
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+      body: currentScreen,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onTabSelected,

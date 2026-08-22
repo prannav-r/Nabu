@@ -121,15 +121,9 @@ class ClientSyncService {
           await _quizRepo.updateAttemptSyncStatus(attempt.id, 'synced');
         }
 
-        // Mark local lessons as synced in SQLite
-        final db = await _appDb.database;
+        // Mark local lessons as synced
         for (final lesson in pendingLessons) {
-          await db.update(
-            'lessons',
-            {'sync_status': 'synced'},
-            where: 'id = ?',
-            whereArgs: [lesson.id],
-          );
+          await _lessonRepo.saveLesson(lesson.copyWith(syncStatus: 'synced'));
         }
 
         // Mark local progress summary as synced in SQLite

@@ -3,6 +3,7 @@ import '../../core/theme.dart';
 import '../../data/local/models/lesson.dart';
 import '../../data/local/repositories/lesson_repository.dart';
 import 'lesson_detail_screen.dart';
+import 'services/topic_generator.dart';
 
 class LessonsScreen extends StatefulWidget {
   final VoidCallback? onLessonUpdated;
@@ -15,8 +16,11 @@ class LessonsScreen extends StatefulWidget {
 
 class _LessonsScreenState extends State<LessonsScreen> {
   final LessonRepository _lessonRepo = LessonRepository();
+  final TopicGeneratorService _generatorService = TopicGeneratorService();
+
   List<Lesson> _lessons = [];
   bool _isLoading = true;
+  bool _isGenerating = false;
 
   @override
   void initState() {
@@ -29,65 +33,12 @@ class _LessonsScreenState extends State<LessonsScreen> {
       _isLoading = true;
     });
     try {
-      var lessons = await _lessonRepo.getAllLessons();
-      if (lessons.isEmpty) {
-        lessons = [
-          const Lesson(
-            id: 'lesson_1',
-            title: '1. Introduction to Science',
-            description: 'Learn the scientific method, observation, and hypothesis testing.',
-            content: 'Science is the systematic study of the natural world.',
-            orderIndex: 1,
-            isCompleted: true,
-            updatedAt: '2026-08-22T00:00:00Z',
-          ),
-          const Lesson(
-            id: 'lesson_2',
-            title: '2. The Solar System',
-            description: 'Explore planets, orbits, and celestial objects in our solar neighborhood.',
-            content: 'Our solar system consists of the Sun and everything bound to it by gravity.',
-            orderIndex: 2,
-            isCompleted: false,
-            updatedAt: '2026-08-22T00:00:00Z',
-          ),
-          const Lesson(
-            id: 'lesson_3',
-            title: '3. Plant Biology & Photosynthesis',
-            description: 'Understand how green plants make energy, oxygen, and support ecosystems.',
-            content: 'Plants use sunlight, carbon dioxide, and water to produce glucose and oxygen.',
-            orderIndex: 3,
-            isCompleted: false,
-            updatedAt: '2026-08-22T00:00:00Z',
-          ),
-          const Lesson(
-            id: 'lesson_4',
-            title: '4. Basic Mathematics: Fractions',
-            description: 'Master understanding parts of a whole, numerators, and denominators.',
-            content: 'A fraction represents a part of a whole number.',
-            orderIndex: 4,
-            isCompleted: false,
-            updatedAt: '2026-08-22T00:00:00Z',
-          ),
-        ];
-      }
+      final lessons = await _lessonRepo.getAllLessons();
       setState(() {
         _lessons = lessons;
       });
     } catch (_) {
-      // Offline fallback
-      setState(() {
-        _lessons = [
-          const Lesson(
-            id: 'lesson_1',
-            title: '1. Introduction to Science',
-            description: 'Learn the scientific method, observation, and hypothesis testing.',
-            content: 'Science is the systematic study of the natural world.',
-            orderIndex: 1,
-            isCompleted: true,
-            updatedAt: '2026-08-22T00:00:00Z',
-          ),
-        ];
-      });
+      // Fallback
     } finally {
       if (mounted) {
         setState(() {
@@ -111,33 +62,176 @@ class _LessonsScreenState extends State<LessonsScreen> {
     );
   }
 
+  Future<void> _showAddTopicDialog() async {
+    final textController = TextEditingController();
+
+    final topic = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.primary, size: 22),
+            SizedBox(width: 8),
+            Text('Generate New Topic'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter any topic or subject. The local AI will generate complete lesson chapters, summaries, and practice quizzes for it offline.',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: textController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Topic Name',
+                hintText: 'e.g. Gravity, Human Heart, Python Basics',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              final val = textController.text.trim();
+              if (val.isNotEmpty) {
+                Navigator.of(ctx).pop(val);
+              }
+            },
+            icon: const Icon(Icons.bolt_rounded, size: 18),
+            label: const Text('Generate Lesson'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (topic != null && topic.isNotEmpty) {
+      setState(() {
+        _isGenerating = true;
+      });
+
+      try {
+        final result = await _generatorService.generateLessonForTopic(topic);
+        await _loadLessons();
+        widget.onLessonUpdated?.call();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✨ Generated new lesson: "${result.lesson.title}" with practice quiz!'),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error generating lesson: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isGenerating = false;
+          });
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Offline Lessons'),
+        title: const Text('Offline Lessons & Topics'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+            tooltip: 'Generate Topic',
+            onPressed: _showAddTopicDialog,
+          ),
+        ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _lessons.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No offline lessons found.',
-                    style: TextStyle(color: AppColors.textSecondary),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddTopicDialog,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.auto_awesome),
+        label: const Text('Generate Topic'),
+      ),
+      body: _isGenerating
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Generating lesson & practice quiz offline...',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadLessons,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16.0),
-                    itemCount: _lessons.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final lesson = _lessons[index];
-                      return _buildLessonItem(lesson);
-                    },
-                  ),
-                ),
+                ],
+              ),
+            )
+          : _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _lessons.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.menu_book_outlined, size: 48, color: AppColors.textSecondary),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'No lessons available yet.',
+                            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: _showAddTopicDialog,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add / Generate a Topic'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadLessons,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                        itemCount: _lessons.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final lesson = _lessons[index];
+                          return _buildLessonItem(lesson);
+                        },
+                      ),
+                    ),
     );
   }
 
@@ -161,7 +255,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
         title: Text(
           lesson.title,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 15.5,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
@@ -170,6 +264,8 @@ class _LessonsScreenState extends State<LessonsScreen> {
           padding: const EdgeInsets.only(top: 4.0),
           child: Text(
             lesson.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,
