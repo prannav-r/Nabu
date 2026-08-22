@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 05 completed; Unit 06 (Voice Interaction) next up.
+- Unit 06 completed; Unit 07 (FastAPI Backend) next up.
 
 ## Current Goal
 
@@ -22,6 +22,7 @@ Update this file after every meaningful implementation change.
 - [x] Unit 03: Offline Lessons and Progress (Local lesson browsing, lesson detail view, offline completion toggling, and local progress calculation).
 - [x] Unit 04: Offline ONNX Tutor (Local ONNX model loading, input handling, offline inference service, and tutor chat interface).
 - [x] Unit 05: Offline Quizzes (Dynamic quiz interface, multiple-choice selection, scoring, local SQLite attempt recording, and score review).
+- [x] Unit 06: Voice Interaction (Speech-to-text input, microphone interaction in Tutor, and text-to-speech audio playback for AI responses).
 
 ## In Progress
 
@@ -29,7 +30,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Unit 06: Voice Interaction (Speech-to-text voice input, microphone interaction in Tutor, and text-to-speech for AI answers).
+- Unit 07: FastAPI Backend (FastAPI setup via uv, Pydantic schemas, password hashing, auth endpoints, sync endpoint skeleton, health checks).
 
 ## Open Questions
 

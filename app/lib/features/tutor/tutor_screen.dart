@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/offline_indicator.dart';
+import '../voice/services/voice_service.dart';
 import 'services/onnx_tutor_service.dart';
 
 class ChatMessage {
+  final String id;
   final String text;
   final bool isUser;
   final String timestamp;
   final Duration? latency;
 
   ChatMessage({
+    required this.id,
     required this.text,
     required this.isUser,
     required this.timestamp,
@@ -30,17 +33,23 @@ class _TutorScreenState extends State<TutorScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final OnnxTutorService _tutorService = OnnxTutorService();
+  final VoiceService _voiceService = VoiceService();
 
   final List<ChatMessage> _messages = [];
   bool _isProcessing = false;
+  bool _isListening = false;
+  String? _currentlySpeakingMessageId;
 
   @override
   void initState() {
     super.initState();
     _tutorService.initialize();
+    _voiceService.initialize();
+
     _messages.add(
       ChatMessage(
-        text: 'Hello! I am your offline AI tutor. Ask me any question about your lessons.',
+        id: 'msg_welcome',
+        text: 'Hello! I am your offline AI tutor. Ask me any question using text or voice.',
         isUser: false,
         timestamp: 'Just now',
       ),
@@ -55,6 +64,7 @@ class _TutorScreenState extends State<TutorScreen> {
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
+    _voiceService.stopSpeaking();
     super.dispose();
   }
 
@@ -81,6 +91,7 @@ class _TutorScreenState extends State<TutorScreen> {
     setState(() {
       _messages.add(
         ChatMessage(
+          id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
           text: text,
           isUser: true,
           timestamp: timeString,
@@ -100,6 +111,7 @@ class _TutorScreenState extends State<TutorScreen> {
       setState(() {
         _messages.add(
           ChatMessage(
+            id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
             text: response.text,
             isUser: false,
             timestamp: timeString,
@@ -109,6 +121,55 @@ class _TutorScreenState extends State<TutorScreen> {
         _isProcessing = false;
       });
       _scrollToBottom();
+    }
+  }
+
+  void _toggleVoiceInput() async {
+    if (_isListening) {
+      await _voiceService.stopListening(
+        onStateChanged: (state) {
+          if (mounted) setState(() => _isListening = state);
+        },
+      );
+    } else {
+      await _voiceService.startListening(
+        onResult: (spokenText) {
+          if (mounted) {
+            _controller.text = spokenText;
+          }
+        },
+        onStateChanged: (state) {
+          if (mounted) setState(() => _isListening = state);
+        },
+      );
+      // Simulate quick spoken input in environment
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Listening... (Speech-to-Text active)'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  void _speakMessage(ChatMessage msg) async {
+    if (_currentlySpeakingMessageId == msg.id) {
+      await _voiceService.stopSpeaking();
+      if (mounted) {
+        setState(() => _currentlySpeakingMessageId = null);
+      }
+    } else {
+      setState(() => _currentlySpeakingMessageId = msg.id);
+      await _voiceService.speak(
+        msg.text,
+        onComplete: () {
+          if (mounted) {
+            setState(() => _currentlySpeakingMessageId = null);
+          }
+        },
+      );
     }
   }
 
@@ -128,7 +189,6 @@ class _TutorScreenState extends State<TutorScreen> {
       ),
       body: Column(
         children: [
-          // Quick suggestion chips
           Container(
             height: 48,
             padding: const EdgeInsets.symmetric(vertical: 6.0),
@@ -162,9 +222,9 @@ class _TutorScreenState extends State<TutorScreen> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
               alignment: Alignment.centerLeft,
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   SizedBox(
                     width: 14,
                     height: 14,
@@ -198,6 +258,8 @@ class _TutorScreenState extends State<TutorScreen> {
   }
 
   Widget _buildMessageBubble(ChatMessage msg) {
+    final isSpeakingThis = _currentlySpeakingMessageId == msg.id;
+
     return Align(
       alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -210,7 +272,10 @@ class _TutorScreenState extends State<TutorScreen> {
           color: msg.isUser ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: msg.isUser ? AppColors.primary : AppColors.border,
+            color: msg.isUser
+                ? AppColors.primary
+                : (isSpeakingThis ? AppColors.primary : AppColors.border),
+            width: isSpeakingThis ? 1.5 : 1.0,
           ),
         ),
         child: Column(
@@ -249,18 +314,11 @@ class _TutorScreenState extends State<TutorScreen> {
                   ],
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Voice output (TTS) will speak this response.'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    child: const Icon(
-                      Icons.volume_up_outlined,
-                      size: 16,
-                      color: AppColors.textSecondary,
+                    onTap: () => _speakMessage(msg),
+                    child: Icon(
+                      isSpeakingThis ? Icons.volume_up : Icons.volume_up_outlined,
+                      size: 18,
+                      color: isSpeakingThis ? AppColors.primary : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -283,16 +341,12 @@ class _TutorScreenState extends State<TutorScreen> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.mic_none_rounded, color: AppColors.primary),
-              tooltip: 'Voice Input',
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Voice input ready. Tap microphone to speak.'),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
-              },
+              icon: Icon(
+                _isListening ? Icons.mic : Icons.mic_none_rounded,
+                color: _isListening ? AppColors.error : AppColors.primary,
+              ),
+              tooltip: _isListening ? 'Stop listening' : 'Speak your question',
+              onPressed: _toggleVoiceInput,
             ),
             Expanded(
               child: TextField(
@@ -300,7 +354,7 @@ class _TutorScreenState extends State<TutorScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendMessage(),
                 decoration: const InputDecoration(
-                  hintText: 'Type your question...',
+                  hintText: 'Type or speak your question...',
                   hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 8),
