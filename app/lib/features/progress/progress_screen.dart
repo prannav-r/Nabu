@@ -5,6 +5,7 @@ import '../../data/local/models/progress.dart';
 import '../../data/local/models/quiz.dart';
 import '../../data/local/repositories/progress_repository.dart';
 import '../../data/local/repositories/quiz_repository.dart';
+import '../sync/services/client_sync_service.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -16,10 +17,12 @@ class ProgressScreen extends StatefulWidget {
 class _ProgressScreenState extends State<ProgressScreen> {
   final ProgressRepository _progressRepo = ProgressRepository();
   final QuizRepository _quizRepo = QuizRepository();
+  final ClientSyncService _syncService = ClientSyncService();
 
   StudentProgress? _progress;
   List<QuizAttempt> _attempts = [];
   bool _isLoading = true;
+  bool _isSyncing = false;
 
   @override
   void initState() {
@@ -41,7 +44,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         _attempts = atts;
       });
     } catch (_) {
-      // Fallback offline
+      // Fallback
     } finally {
       if (mounted) {
         setState(() {
@@ -51,19 +54,51 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
   }
 
+  Future<void> _triggerManualSync() async {
+    setState(() {
+      _isSyncing = true;
+    });
+
+    final result = await _syncService.performSync(studentId: 'student_1');
+
+    if (mounted) {
+      setState(() {
+        _isSyncing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: result.success ? AppColors.success : AppColors.warning,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      // Refresh progress and attempts state
+      await _loadProgress();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasPendingSync = _attempts.any((a) => a.syncStatus == 'pending') ||
         (_progress?.syncStatus == 'pending');
 
+    SyncStatus status = SyncStatus.offline;
+    if (_isSyncing) {
+      status = SyncStatus.syncing;
+    } else if (!hasPendingSync) {
+      status = SyncStatus.onlineSynced;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Progress'),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 16.0),
             child: Center(
-              child: OfflineStatusIndicator(status: SyncStatus.offline),
+              child: OfflineStatusIndicator(status: status),
             ),
           ),
         ],
@@ -77,6 +112,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 children: [
                   _buildSummaryCard(),
                   const SizedBox(height: 16),
+                  _buildSyncStatusCard(hasPendingSync),
+                  const SizedBox(height: 16),
                   const Text(
                     'Recent Quiz Scores',
                     style: TextStyle(
@@ -87,9 +124,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                   const SizedBox(height: 8),
                   if (_attempts.isEmpty)
-                    Card(
+                    const Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: EdgeInsets.all(16.0),
                         child: Text(
                           'No quiz attempts yet. Complete a quiz to track your scores offline!',
                           style: TextStyle(
@@ -101,8 +138,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     )
                   else
                     ..._attempts.map((a) => _buildScoreItem(a)),
-                  const SizedBox(height: 16),
-                  _buildSyncStatusCard(hasPendingSync),
                 ],
               ),
             ),
@@ -230,36 +265,64 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              hasPendingSync ? Icons.sync_problem : Icons.sync,
-              color: hasPendingSync ? AppColors.warning : AppColors.textSecondary,
+            Row(
+              children: [
+                Icon(
+                  hasPendingSync ? Icons.cloud_queue_rounded : Icons.cloud_done_rounded,
+                  color: hasPendingSync ? AppColors.warning : AppColors.success,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Cloud Synchronization',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasPendingSync
+                            ? 'Pending records stored safely on device. Tap sync when connected to internet.'
+                            : 'All local learning progress is fully synchronized.',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Synchronization State',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isSyncing ? null : _triggerManualSync,
+                icon: _isSyncing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.sync_rounded, size: 18),
+                label: Text(_isSyncing ? 'Syncing...' : 'Sync Now with Cloud'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    hasPendingSync
-                        ? 'Pending records stored locally. Will synchronize automatically when connectivity is restored.'
-                        : 'All local progress is synchronized.',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],

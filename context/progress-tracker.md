@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 07 completed; Unit 08 (Synchronization) next up.
+- Unit 08 completed; Unit 09 (Final Integration and Security Pass) next up.
 
 ## Current Goal
 
@@ -24,6 +24,7 @@ Update this file after every meaningful implementation change.
 - [x] Unit 05: Offline Quizzes (Dynamic quiz interface, multiple-choice selection, scoring, local SQLite attempt recording, and score review).
 - [x] Unit 06: Voice Interaction (Speech-to-text input, microphone interaction in Tutor, and text-to-speech audio playback for AI responses).
 - [x] Unit 07: FastAPI Backend (FastAPI application with uv, Pydantic schemas, bcrypt password hashing, JWT auth, idempotent sync endpoints, and health check).
+- [x] Unit 08: Synchronization (Connectivity reachability service, local pending-sync queue management, upload orchestration, retry logic on failure, and server response handling).
 
 ## In Progress
 
@@ -31,7 +32,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Unit 08: Synchronization (Connectivity detection, local pending-sync queue management, upload orchestration, retry logic on failure, and server response handling).
+- Unit 09: Final Integration and Security Pass (Auth integration, settings backend URL config, error boundaries, secret verification, and end-to-end verification).
 
 ## Open Questions
 
