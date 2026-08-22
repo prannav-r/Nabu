@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from backend.app.main import app
@@ -12,20 +13,24 @@ def test_health_endpoint():
     assert "timestamp" in data
 
 def test_auth_register_and_login():
+    unique_id = uuid.uuid4().hex[:8]
+    username = f"user_{unique_id}"
+    email = f"student_{unique_id}@example.com"
+
     reg_payload = {
-        "username": "teststudent",
-        "email": "student@example.com",
+        "username": username,
+        "email": email,
         "password": "SecurePassword123!",
     }
     reg_res = client.post("/auth/register", json=reg_payload)
     assert reg_res.status_code == 200
     reg_data = reg_res.json()
     assert "access_token" in reg_data
-    assert reg_data["user"]["username"] == "teststudent"
+    assert reg_data["user"]["username"] == username
 
     # Login
     login_payload = {
-        "username_or_email": "teststudent",
+        "username_or_email": username,
         "password": "SecurePassword123!",
     }
     login_res = client.post("/auth/login", json=login_payload)
@@ -34,8 +39,10 @@ def test_auth_register_and_login():
     assert "access_token" in login_data
 
 def test_sync_push_idempotent():
+    unique_student_id = f"student_{uuid.uuid4().hex[:8]}"
+
     sync_payload = {
-        "student_id": "student_1",
+        "student_id": unique_student_id,
         "attempts": [
             {
                 "client_id": "att_test_1",
@@ -72,7 +79,7 @@ def test_sync_push_idempotent():
     assert res2.json()["success"] is True
 
     # Check status
-    status_res = client.get("/sync/status/student_1")
+    status_res = client.get(f"/sync/status/{unique_student_id}")
     assert status_res.status_code == 200
     status_data = status_res.json()
     assert status_data["total_synced_attempts"] == 1
