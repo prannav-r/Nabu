@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Planning complete; implementation not started.
+- Unit 01 completed; Unit 02 (Local SQLite Database) next up.
 
 ## Current Goal
 
@@ -17,6 +17,7 @@ Update this file after every meaningful implementation change.
 - [x] Offline-first architecture defined.
 - [x] Context and agent rules created.
 - [x] Build order defined.
+- [x] Unit 01: Flutter application shell, theme, navigation, and placeholder screens.
 
 ## In Progress
 
@@ -24,7 +25,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Unit 01: Create Flutter project and minimal application shell.
+- Unit 02: Local SQLite Database and repository layer.
 
 ## Open Questions
 
