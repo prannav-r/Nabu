@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 01 completed; Unit 02 (Local SQLite Database) next up.
+- Unit 02 completed; Unit 03 (Offline Lessons and Progress) next up.
 
 ## Current Goal
 
@@ -18,6 +18,7 @@ Update this file after every meaningful implementation change.
 - [x] Context and agent rules created.
 - [x] Build order defined.
 - [x] Unit 01: Flutter application shell, theme, navigation, and placeholder screens.
+- [x] Unit 02: Local SQLite Database schema, seed data, models, and repository layer.
 
 ## In Progress
 
@@ -25,7 +26,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Unit 02: Local SQLite Database and repository layer.
+- Unit 03: Offline Lessons and Progress (Local lesson list, lesson detail screen, mark lesson complete, store completion locally, display progress).
 
 ## Open Questions
 
