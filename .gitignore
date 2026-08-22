@@ -1,10 +1,14 @@
 # Virtual Environment (uv / python)
 .venv/
 
-# Python cache
+# Python cache & test artifacts
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+*.db
+*.sqlite
+*.sqlite3
 
 # Environment variables / secrets
 .env

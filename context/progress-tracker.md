@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 06 completed; Unit 07 (FastAPI Backend) next up.
+- Unit 07 completed; Unit 08 (Synchronization) next up.
 
 ## Current Goal
 
@@ -23,6 +23,7 @@ Update this file after every meaningful implementation change.
 - [x] Unit 04: Offline ONNX Tutor (Local ONNX model loading, input handling, offline inference service, and tutor chat interface).
 - [x] Unit 05: Offline Quizzes (Dynamic quiz interface, multiple-choice selection, scoring, local SQLite attempt recording, and score review).
 - [x] Unit 06: Voice Interaction (Speech-to-text input, microphone interaction in Tutor, and text-to-speech audio playback for AI responses).
+- [x] Unit 07: FastAPI Backend (FastAPI application with uv, Pydantic schemas, bcrypt password hashing, JWT auth, idempotent sync endpoints, and health check).
 
 ## In Progress
 
@@ -30,7 +31,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Unit 07: FastAPI Backend (FastAPI setup via uv, Pydantic schemas, password hashing, auth endpoints, sync endpoint skeleton, health checks).
+- Unit 08: Synchronization (Connectivity detection, local pending-sync queue management, upload orchestration, retry logic on failure, and server response handling).
 
 ## Open Questions
 
