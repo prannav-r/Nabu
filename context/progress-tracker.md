@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 04 completed; Unit 05 (Offline Quizzes) next up.
+- Unit 05 completed; Unit 06 (Voice Interaction) next up.
 
 ## Current Goal
 
@@ -21,6 +21,7 @@ Update this file after every meaningful implementation change.
 - [x] Unit 02: Local SQLite Database schema, seed data, models, and repository layer.
 - [x] Unit 03: Offline Lessons and Progress (Local lesson browsing, lesson detail view, offline completion toggling, and local progress calculation).
 - [x] Unit 04: Offline ONNX Tutor (Local ONNX model loading, input handling, offline inference service, and tutor chat interface).
+- [x] Unit 05: Offline Quizzes (Dynamic quiz interface, multiple-choice selection, scoring, local SQLite attempt recording, and score review).
 
 ## In Progress
 
@@ -28,7 +29,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Unit 05: Offline Quizzes (Local question retrieval, interactive quiz taking, answer validation, score calculation, and offline attempt recording in SQLite).
+- Unit 06: Voice Interaction (Speech-to-text voice input, microphone interaction in Tutor, and text-to-speech for AI answers).
 
 ## Open Questions
 
