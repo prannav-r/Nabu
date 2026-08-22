@@ -1,0 +1,8 @@
+{
+  "model_name": "offline-educational-tutor-mini",
+  "version": "1.0.0",
+  "format": "ONNX",
+  "input_shape": [1, 64],
+  "output_shape": [1, 128],
+  "description": "Lightweight quantized educational assistant model running on local device CPU via ONNX Runtime."
+}
