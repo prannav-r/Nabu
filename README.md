@@ -1,4 +1,4 @@
-# Nabu AI — Offline AI Tutor for Rural Schools
+# Nabu
 
 An offline-first educational platform designed to empower students in schools with limited or absent internet connectivity. The application runs local AI inference, stores student progress locally on-device, supports voice interaction, generates lesson content and practice quizzes offline, and synchronizes learning metrics seamlessly with the cloud whenever network connectivity is restored.
 
