@@ -177,8 +177,8 @@ class _TutorScreenState extends State<TutorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Offline AI Tutor'),
-        actions: const [
+        title: Text('Offline AI Tutor'),
+        actions: [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
             child: Center(
@@ -191,26 +191,26 @@ class _TutorScreenState extends State<TutorScreen> {
         children: [
           Container(
             height: 48,
-            padding: const EdgeInsets.symmetric(vertical: 6.0),
+            padding: EdgeInsets.symmetric(vertical: 6.0),
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              padding: EdgeInsets.symmetric(horizontal: 12.0),
               children: [
                 _buildQuickChip('Scientific Method'),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _buildQuickChip('Photosynthesis'),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _buildQuickChip('Solar System'),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _buildQuickChip('Fractions & Math'),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
@@ -220,9 +220,9 @@ class _TutorScreenState extends State<TutorScreen> {
           ),
           if (_isProcessing)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
               alignment: Alignment.centerLeft,
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
@@ -236,7 +236,7 @@ class _TutorScreenState extends State<TutorScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
-                      color: AppColors.textSecondary,
+                      color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                     ),
                   ),
                 ],
@@ -250,9 +250,9 @@ class _TutorScreenState extends State<TutorScreen> {
 
   Widget _buildQuickChip(String label) {
     return ActionChip(
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      backgroundColor: AppColors.surface,
-      side: const BorderSide(color: AppColors.border),
+      label: Text(label, style: TextStyle(fontSize: 12)),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      side: BorderSide(color: Theme.of(context).dividerColor),
       onPressed: () => _sendMessage('Explain $label in simple terms'),
     );
   }
@@ -263,18 +263,18 @@ class _TutorScreenState extends State<TutorScreen> {
     return Align(
       alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6.0),
-        padding: const EdgeInsets.all(14.0),
+        margin: EdgeInsets.symmetric(vertical: 6.0),
+        padding: EdgeInsets.all(14.0),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.82,
         ),
         decoration: BoxDecoration(
-          color: msg.isUser ? AppColors.primary : AppColors.surface,
+          color: msg.isUser ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: msg.isUser
-                ? AppColors.primary
-                : (isSpeakingThis ? AppColors.primary : AppColors.border),
+                ? Theme.of(context).colorScheme.primary
+                : (isSpeakingThis ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor),
             width: isSpeakingThis ? 1.5 : 1.0,
           ),
         ),
@@ -287,10 +287,10 @@ class _TutorScreenState extends State<TutorScreen> {
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.4,
-                color: msg.isUser ? Colors.white : AppColors.textPrimary,
+                color: msg.isUser ? Colors.white : Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -298,27 +298,27 @@ class _TutorScreenState extends State<TutorScreen> {
                   msg.timestamp,
                   style: TextStyle(
                     fontSize: 11,
-                    color: msg.isUser ? Colors.white70 : AppColors.textSecondary,
+                    color: msg.isUser ? Colors.white70 : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                   ),
                 ),
                 if (!msg.isUser) ...[
                   if (msg.latency != null) ...[
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       '• ${msg.latency!.inMilliseconds}ms (ONNX)',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: AppColors.textSecondary,
+                        color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                       ),
                     ),
                   ],
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => _speakMessage(msg),
                     child: Icon(
                       isSpeakingThis ? Icons.volume_up : Icons.volume_up_outlined,
                       size: 18,
-                      color: isSpeakingThis ? AppColors.primary : AppColors.textSecondary,
+                      color: isSpeakingThis ? Theme.of(context).colorScheme.primary : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                     ),
                   ),
                 ],
@@ -332,10 +332,10 @@ class _TutorScreenState extends State<TutorScreen> {
 
   Widget _buildInputBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: SafeArea(
         child: Row(
@@ -343,7 +343,7 @@ class _TutorScreenState extends State<TutorScreen> {
             IconButton(
               icon: Icon(
                 _isListening ? Icons.mic : Icons.mic_none_rounded,
-                color: _isListening ? AppColors.error : AppColors.primary,
+                color: _isListening ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary,
               ),
               tooltip: _isListening ? 'Stop listening' : 'Speak your question',
               onPressed: _toggleVoiceInput,
@@ -353,16 +353,16 @@ class _TutorScreenState extends State<TutorScreen> {
                 controller: _controller,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendMessage(),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Type or speak your question...',
-                  hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                  hintStyle: TextStyle(color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey), fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 8),
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.send_rounded, color: AppColors.primary),
+              icon: Icon(Icons.send_rounded, color: Theme.of(context).colorScheme.primary),
               tooltip: 'Send',
               onPressed: () => _sendMessage(),
             ),

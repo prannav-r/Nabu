@@ -75,7 +75,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.message),
-          backgroundColor: result.success ? AppColors.success : AppColors.warning,
+          backgroundColor: result.success ? Colors.green : Colors.orange,
           duration: const Duration(seconds: 3),
         ),
       );
@@ -98,10 +98,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Learning Progress'),
+        title: Text('My Learning Progress'),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: EdgeInsets.only(right: 16.0),
             child: Center(
               child: OfflineStatusIndicator(status: status),
             ),
@@ -109,18 +109,18 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadProgress,
               child: ListView(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0),
                 children: [
                   _buildSummaryHeroCard(),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   _buildSyncCard(hasPendingSync),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildTopicBreakdownSection(),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildRecentQuizScoresSection(),
                 ],
               ),
@@ -136,42 +136,42 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Curriculum Mastery',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   '${(progressFraction * 100).toInt()}% Done',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             ClipRRect(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
               child: LinearProgressIndicator(
                 value: progressFraction,
                 minHeight: 8,
-                backgroundColor: AppColors.border,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                backgroundColor: Theme.of(context).dividerColor,
+                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -182,7 +182,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     icon: Icons.check_circle_outline,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _buildMetricTile(
                     title: 'Average Score',
@@ -191,7 +191,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     icon: Icons.star_outline,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _buildMetricTile(
                     title: 'Quizzes Taken',
@@ -215,31 +215,31 @@ class _ProgressScreenState extends State<ProgressScreen> {
     required IconData icon,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primary, size: 18),
-          const SizedBox(height: 6),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 18),
+          SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: AppColors.textSecondary,
+              color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -252,38 +252,38 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Topic Completion Status',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         ..._lessons.map((lesson) {
           return Card(
-            margin: const EdgeInsets.only(bottom: 8.0),
+            margin: EdgeInsets.only(bottom: 8.0),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 4),
               leading: Icon(
                 lesson.isCompleted ? Icons.check_circle : Icons.circle_outlined,
-                color: lesson.isCompleted ? AppColors.success : AppColors.textSecondary,
+                color: lesson.isCompleted ? Colors.green : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                 size: 22,
               ),
               title: Text(
                 lesson.title,
-                style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
               ),
               trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: lesson.isCompleted
-                      ? AppColors.success.withAlpha(20)
-                      : AppColors.background,
-                  borderRadius: BorderRadius.circular(6),
+                      ? Colors.green.withAlpha(20)
+                      : Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: lesson.isCompleted ? AppColors.success : AppColors.border,
+                    color: lesson.isCompleted ? Colors.green : Theme.of(context).dividerColor,
                   ),
                 ),
                 child: Text(
@@ -291,7 +291,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: lesson.isCompleted ? AppColors.success : AppColors.textSecondary,
+                    color: lesson.isCompleted ? Colors.green : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                   ),
                 ),
               ),
@@ -306,22 +306,22 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Recent Quiz Activity',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         if (_attempts.isEmpty)
-          const Card(
+          Card(
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 'No quiz attempts recorded yet. Start any quiz to track your mastery offline!',
-                style: TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 13.5, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
               ),
             ),
           )
@@ -331,25 +331,25 @@ class _ProgressScreenState extends State<ProgressScreen> {
             final isPassed = percentage >= 60;
 
             return Card(
-              margin: const EdgeInsets.only(bottom: 8.0),
+              margin: EdgeInsets.only(bottom: 8.0),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: isPassed ? AppColors.success.withAlpha(20) : AppColors.warning.withAlpha(20),
+                  backgroundColor: isPassed ? Colors.green.withAlpha(20) : Colors.orange.withAlpha(20),
                   child: Icon(
                     isPassed ? Icons.check : Icons.refresh,
-                    color: isPassed ? AppColors.success : AppColors.warning,
+                    color: isPassed ? Colors.green : Colors.orange,
                     size: 20,
                   ),
                 ),
                 title: Text(
                   attempt.lessonId.replaceAll('lesson_', 'Lesson ').replaceAll('_', ' ').toUpperCase(),
-                  style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
                 ),
                 subtitle: Text(
                   attempt.syncStatus == 'synced' ? '✓ Synced' : '• Saved locally (offline)',
                   style: TextStyle(
                     fontSize: 11.5,
-                    color: attempt.syncStatus == 'synced' ? AppColors.textSecondary : AppColors.warning,
+                    color: attempt.syncStatus == 'synced' ? (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey) : Colors.orange,
                   ),
                 ),
                 trailing: Text(
@@ -357,7 +357,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: isPassed ? AppColors.primary : AppColors.warning,
+                    color: isPassed ? Theme.of(context).colorScheme.primary : Colors.orange,
                   ),
                 ),
               ),
@@ -370,33 +370,33 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Widget _buildSyncCard(bool hasPendingSync) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14.0),
+        padding: EdgeInsets.all(14.0),
         child: Row(
           children: [
             Icon(
               hasPendingSync ? Icons.cloud_queue_rounded : Icons.cloud_done_rounded,
-              color: hasPendingSync ? AppColors.warning : AppColors.success,
+              color: hasPendingSync ? Colors.orange : Colors.green,
               size: 26,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Cloud Synchronization',
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     hasPendingSync
                         ? 'Pending changes saved locally.'
                         : 'All progress is fully synchronized.',
-                    style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 11.5, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
                   ),
                 ],
               ),
@@ -404,14 +404,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
             ElevatedButton(
               onPressed: _isSyncing ? null : _triggerManualSync,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: Text(
                 _isSyncing ? 'Syncing...' : 'Sync',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
             ),
           ],

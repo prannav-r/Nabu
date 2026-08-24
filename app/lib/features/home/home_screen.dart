@@ -53,10 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Offline AI Tutor'),
+        title: Text('Offline AI Tutor'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: Icon(Icons.settings_outlined),
             tooltip: 'Settings',
             onPressed: widget.onNavigateToSettings,
           ),
@@ -65,12 +65,12 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: _loadProgress,
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
+          physics: AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
@@ -78,46 +78,51 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   OfflineStatusIndicator(status: SyncStatus.offline),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Your Progress',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: progressFraction,
-                        backgroundColor: AppColors.border,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: LinearProgressIndicator(
+                          value: progressFraction,
+                          minHeight: 10,
+                          backgroundColor: Theme.of(context).dividerColor,
+                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                        ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 12),
                       Text(
                         '$completed of $total lessons completed',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               _buildActionCard(
                 context,
                 title: 'Continue Learning',
@@ -126,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 buttonText: 'Open Lessons',
                 onPressed: widget.onNavigateToLessons,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               _buildActionCard(
                 context,
                 title: 'Ask AI Tutor',
@@ -135,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 buttonText: 'Start Asking',
                 onPressed: widget.onNavigateToTutor,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               _buildActionCard(
                 context,
                 title: 'Take a Quiz',
@@ -160,55 +165,53 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onPressed,
   }) {
     return Card(
+      margin: EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 28),
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             ElevatedButton(
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(buttonText, style: const TextStyle(fontSize: 12)),
+              child: Text(buttonText, style: TextStyle(fontSize: 13)),
             ),
           ],
         ),
