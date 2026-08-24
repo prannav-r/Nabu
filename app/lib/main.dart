@@ -7,6 +7,8 @@ import 'features/quiz/quiz_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/tutor/tutor_screen.dart';
 
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+
 void main() {
   runApp(const OfflineAiTutorApp());
 }
@@ -16,13 +18,20 @@ class OfflineAiTutorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Offline AI Tutor',
-      theme: AppTheme.lightTheme,
-      debugShowCheckedModeBanner: false,
-      home: const MainNavigationShell(),
-      routes: {
-        '/settings': (context) => const SettingsScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          title: 'Offline AI Tutor',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: currentMode,
+          debugShowCheckedModeBanner: false,
+          home: const MainNavigationShell(),
+          routes: {
+            '/settings': (context) => const SettingsScreen(),
+          },
+        );
       },
     );
   }

@@ -153,12 +153,12 @@ class _QuizScreenState extends State<QuizScreen> {
         title: Text(_isQuizActive ? 'Interactive Quiz' : 'Offline Quizzes'),
         leading: _isQuizActive
             ? IconButton(
-                icon: const Icon(Icons.arrow_back),
+                icon: Icon(Icons.arrow_back),
                 tooltip: 'Back to Quiz List',
                 onPressed: _exitQuizToSelector,
               )
             : null,
-        actions: const [
+        actions: [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
             child: Center(
@@ -168,7 +168,7 @@ class _QuizScreenState extends State<QuizScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : !_isQuizActive
               ? _buildQuizSelectionView()
               : _isFinished
@@ -181,55 +181,55 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Widget _buildQuizSelectionView() {
     return ListView(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(16.0),
       children: [
         Card(
-          color: AppColors.primary.withAlpha(15),
+          color: Theme.of(context).colorScheme.primary.withAlpha(15),
           shape: RoundedRectangleBorder(
-            side: const BorderSide(color: AppColors.primary, width: 1.5),
-            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: ListTile(
-            contentPadding: const EdgeInsets.all(16.0),
+            contentPadding: EdgeInsets.all(16.0),
             leading: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.stars_rounded, color: Colors.white, size: 28),
+              child: Icon(Icons.stars_rounded, color: Colors.white, size: 28),
             ),
-            title: const Text(
+            title: Text(
               'Comprehensive Practice Quiz',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            subtitle: const Padding(
+            subtitle: Padding(
               padding: EdgeInsets.only(top: 4.0),
               child: Text(
                 'Test your knowledge across all available lessons and topics in a combined quiz.',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 13, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
               ),
             ),
-            trailing: const Icon(Icons.play_circle_fill, color: AppColors.primary, size: 32),
+            trailing: Icon(Icons.play_circle_fill, color: Theme.of(context).colorScheme.primary, size: 32),
             onTap: () => _startQuizForLesson(null),
           ),
         ),
-        const SizedBox(height: 20),
-        const Text(
+        SizedBox(height: 20),
+        Text(
           'Select a Topic Quiz',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         if (_availableLessons.isEmpty)
-          const Card(
+          Card(
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Text('No topic quizzes found. Generate topics from the Lessons tab.'),
@@ -238,24 +238,24 @@ class _QuizScreenState extends State<QuizScreen> {
         else
           ..._availableLessons.map((l) {
             return Card(
-              margin: const EdgeInsets.only(bottom: 10.0),
+              margin: EdgeInsets.only(bottom: 10.0),
               child: ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: AppColors.background,
-                  child: Icon(Icons.quiz_outlined, color: AppColors.primary, size: 20),
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  child: Icon(Icons.quiz_outlined, color: Theme.of(context).colorScheme.primary, size: 20),
                 ),
                 title: Text(
                   l.title,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 subtitle: Text(
                   l.isCompleted ? '✓ Lesson Completed' : 'Study & Test',
                   style: TextStyle(
                     fontSize: 12,
-                    color: l.isCompleted ? AppColors.success : AppColors.textSecondary,
+                    color: l.isCompleted ? Colors.green : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                   ),
                 ),
-                trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                trailing: Icon(Icons.chevron_right, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
                 onTap: () => _startQuizForLesson(l.id),
               ),
             );
@@ -267,20 +267,20 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _buildNoQuestionsView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.quiz_outlined, size: 48, color: AppColors.textSecondary),
-            const SizedBox(height: 12),
-            const Text(
+            Icon(Icons.quiz_outlined, size: 48, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
+            SizedBox(height: 12),
+            Text(
               'No practice questions found for this topic yet.',
-              style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 15, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: _exitQuizToSelector,
-              child: const Text('Return to Quiz List'),
+              child: Text('Return to Quiz List'),
             ),
           ],
         ),
@@ -293,7 +293,7 @@ class _QuizScreenState extends State<QuizScreen> {
     final progressVal = (_currentQuestionIndex + 1) / _questions.length;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -302,44 +302,44 @@ class _QuizScreenState extends State<QuizScreen> {
             children: [
               Text(
                 'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                 ),
               ),
               Text(
                 '${(progressVal * 100).toInt()}%',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           LinearProgressIndicator(
             value: progressVal,
-            backgroundColor: AppColors.border,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            backgroundColor: Theme.of(context).dividerColor,
+            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             currentQ.questionText,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           ...List.generate(currentQ.options.length, (index) {
             final letter = String.fromCharCode(65 + index); // A, B, C, D
             final isSelected = _selectedOptionIndex == index;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
+              padding: EdgeInsets.only(bottom: 12.0),
               child: _buildOptionCard(
                 optionLetter: letter,
                 text: currentQ.options[index],
@@ -348,21 +348,21 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
             );
           }),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _selectedOptionIndex == null || _isSaving ? null : _nextOrSubmit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
@@ -371,7 +371,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       _currentQuestionIndex == _questions.length - 1
                           ? 'Submit Quiz ✓'
                           : 'Next Question →',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
           ),
@@ -388,14 +388,14 @@ class _QuizScreenState extends State<QuizScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(14.0),
+        padding: EdgeInsets.all(14.0),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withAlpha(20) : AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? Theme.of(context).colorScheme.primary.withAlpha(20) : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -405,27 +405,27 @@ class _QuizScreenState extends State<QuizScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.background,
+                color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).scaffoldBackgroundColor,
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
                   optionLetter,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                    color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Text(
                 text,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -441,87 +441,87 @@ class _QuizScreenState extends State<QuizScreen> {
 
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isPassed ? AppColors.success.withAlpha(25) : AppColors.warning.withAlpha(25),
+                color: isPassed ? Colors.green.withAlpha(25) : Colors.orange.withAlpha(25),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 isPassed ? Icons.emoji_events_rounded : Icons.replay_rounded,
                 size: 64,
-                color: isPassed ? AppColors.success : AppColors.warning,
+                color: isPassed ? Colors.green : Colors.orange,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               isPassed ? '🎉 Great Job!' : 'Keep Practicing!',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'You scored $_score out of ${_questions.length} ($percentage%)',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.save_outlined, color: AppColors.success, size: 18),
+                  Icon(Icons.save_outlined, color: Colors.green, size: 18),
                   SizedBox(width: 8),
                   Text(
                     'Score recorded locally & queued for sync.',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _startQuizForLesson(_selectedLessonId),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('Retake Quiz', style: TextStyle(fontSize: 15)),
+                    child: Text('Retake Quiz', style: TextStyle(fontSize: 15)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _exitQuizToSelector,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('Choose Quiz', style: TextStyle(fontSize: 15)),
+                    child: Text('Choose Quiz', style: TextStyle(fontSize: 15)),
                   ),
                 ),
               ],

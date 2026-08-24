@@ -69,9 +69,9 @@ class _LessonsScreenState extends State<LessonsScreen> {
     final topic = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.auto_awesome, color: AppColors.primary, size: 22),
+            Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary, size: 22),
             SizedBox(width: 8),
             Text('Generate New Topic'),
           ],
@@ -80,11 +80,11 @@ class _LessonsScreenState extends State<LessonsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Enter any topic or subject. The local AI will generate complete lesson chapters, summaries, and practice quizzes for it offline.',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 13, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextField(
               controller: textController,
               autofocus: true,
@@ -99,7 +99,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -108,10 +108,10 @@ class _LessonsScreenState extends State<LessonsScreen> {
                 Navigator.of(ctx).pop(val);
               }
             },
-            icon: const Icon(Icons.bolt_rounded, size: 18),
-            label: const Text('Generate Lesson'),
+            icon: Icon(Icons.bolt_rounded, size: 18),
+            label: Text('Generate Lesson'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -133,7 +133,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('✨ Generated new lesson: "${result.lesson.title}" with practice quiz!'),
-              backgroundColor: AppColors.success,
+              backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -143,7 +143,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error generating lesson: $e'),
-              backgroundColor: AppColors.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }
@@ -161,10 +161,10 @@ class _LessonsScreenState extends State<LessonsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Offline Lessons & Topics'),
+        title: Text('Offline Lessons & Topics'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+            icon: Icon(Icons.add_circle_outline, color: Theme.of(context).colorScheme.primary),
             tooltip: 'Generate Topic',
             onPressed: _showAddTopicDialog,
           ),
@@ -172,16 +172,16 @@ class _LessonsScreenState extends State<LessonsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddTopicDialog,
-        backgroundColor: AppColors.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.auto_awesome),
-        label: const Text('Generate Topic'),
+        icon: Icon(Icons.auto_awesome),
+        label: Text('Generate Topic'),
       ),
       body: _isGenerating
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
                   Text(
@@ -189,32 +189,32 @@ class _LessonsScreenState extends State<LessonsScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
               ),
             )
           : _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(child: CircularProgressIndicator())
               : _lessons.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.menu_book_outlined, size: 48, color: AppColors.textSecondary),
-                          const SizedBox(height: 12),
-                          const Text(
+                          Icon(Icons.menu_book_outlined, size: 48, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
+                          SizedBox(height: 12),
+                          Text(
                             'No lessons available yet.',
-                            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                            style: TextStyle(fontSize: 16, color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)),
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           ElevatedButton.icon(
                             onPressed: _showAddTopicDialog,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add / Generate a Topic'),
+                            icon: Icon(Icons.add),
+                            label: Text('Add / Generate a Topic'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
                             ),
                           ),
@@ -224,9 +224,9 @@ class _LessonsScreenState extends State<LessonsScreen> {
                   : RefreshIndicator(
                       onRefresh: _loadLessons,
                       child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                        padding: EdgeInsets.fromLTRB(16, 16, 16, 80),
                         itemCount: _lessons.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (_, __) => SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final lesson = _lessons[index];
                           return _buildLessonItem(lesson);
@@ -239,43 +239,43 @@ class _LessonsScreenState extends State<LessonsScreen> {
   Widget _buildLessonItem(Lesson lesson) {
     return Card(
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: lesson.isCompleted
-                ? AppColors.success.withAlpha(30)
-                : AppColors.background,
+                ? Colors.green.withAlpha(30)
+                : Theme.of(context).scaffoldBackgroundColor,
             shape: BoxShape.circle,
           ),
           child: Icon(
             lesson.isCompleted ? Icons.check_circle : Icons.circle_outlined,
-            color: lesson.isCompleted ? AppColors.success : AppColors.textSecondary,
+            color: lesson.isCompleted ? Colors.green : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
           ),
         ),
         title: Text(
           lesson.title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15.5,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
+          padding: EdgeInsets.only(top: 4.0),
           child: Text(
             lesson.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
             ),
           ),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.chevron_right,
-          color: AppColors.textSecondary,
+          color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
         ),
         onTap: () => _openLesson(lesson),
       ),

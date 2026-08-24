@@ -23,29 +23,29 @@ class OfflineStatusIndicator extends StatelessWidget {
 
     switch (status) {
       case SyncStatus.offline:
-        dotColor = AppColors.textSecondary;
+        dotColor = (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey);
         label = 'Offline — Working locally';
         break;
       case SyncStatus.onlineSynced:
-        dotColor = AppColors.success;
+        dotColor = Colors.green;
         label = 'Online — Synced';
         break;
       case SyncStatus.syncing:
-        dotColor = AppColors.primary;
+        dotColor = Theme.of(context).colorScheme.primary;
         label = 'Syncing...';
         break;
       case SyncStatus.syncFailed:
-        dotColor = AppColors.warning;
+        dotColor = Colors.orange;
         label = 'Sync failed — Will retry';
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -58,12 +58,12 @@ class OfflineStatusIndicator extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
               fontWeight: FontWeight.w500,
             ),
           ),

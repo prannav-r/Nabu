@@ -62,8 +62,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   : 'Lesson marked as incomplete.',
             ),
             backgroundColor: _currentLesson.isCompleted
-                ? AppColors.success
-                : AppColors.textSecondary,
+                ? Colors.green
+                : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -81,17 +81,17 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Lesson?'),
+        title: Text('Delete Lesson?'),
         content: Text('Are you sure you want to delete "${_currentLesson.title}" and its quiz questions?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
-            child: const Text('Delete'),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error, foregroundColor: Colors.white),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -107,7 +107,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Deleted "${_currentLesson.title}".'),
-            backgroundColor: AppColors.textSecondary,
+            backgroundColor: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
           ),
         );
       }
@@ -139,27 +139,27 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         title: Text(_currentLesson.title),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
             tooltip: 'Delete Lesson',
             onPressed: _confirmDeleteLesson,
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Status banner
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _currentLesson.isCompleted
-                    ? AppColors.success.withAlpha(25)
-                    : AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
+                    ? Colors.green.withAlpha(25)
+                    : Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: _currentLesson.isCompleted ? AppColors.success : AppColors.border,
+                  color: _currentLesson.isCompleted ? Colors.green : Theme.of(context).dividerColor,
                 ),
               ),
               child: Row(
@@ -169,10 +169,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         ? Icons.check_circle
                         : Icons.radio_button_unchecked,
                     color: _currentLesson.isCompleted
-                        ? AppColors.success
-                        : AppColors.textSecondary,
+                        ? Colors.green
+                        : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _currentLesson.isCompleted
@@ -182,42 +182,42 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: _currentLesson.isCompleted
-                            ? AppColors.success
-                            : AppColors.textSecondary,
+                            ? Colors.green
+                            : (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               _currentLesson.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               _currentLesson.description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14.5,
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey),
                 fontStyle: FontStyle.italic,
               ),
             ),
-            const Divider(height: 32, color: AppColors.border),
+            Divider(height: 32, color: Theme.of(context).dividerColor),
             Text(
               _currentLesson.content,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 height: 1.6,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             // Completion Action Button
             SizedBox(
@@ -225,7 +225,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _toggleCompletion,
                 icon: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
@@ -239,21 +239,21 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   _currentLesson.isCompleted
                       ? 'Completed ✓ (Tap to Mark Incomplete)'
                       : 'Mark Lesson as Completed ✓',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _currentLesson.isCompleted
-                      ? AppColors.textSecondary
-                      : AppColors.primary,
+                      ? (Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey)
+                      : Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Quick Actions: Take Quiz & Ask AI Tutor
             Row(
@@ -261,37 +261,37 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _openLessonQuiz,
-                    icon: const Icon(Icons.quiz_outlined, size: 18),
-                    label: const Text('Take Quiz'),
+                    icon: Icon(Icons.quiz_outlined, size: 18),
+                    label: Text('Take Quiz'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                      padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _askTutorAboutLesson,
-                    icon: const Icon(Icons.smart_toy_outlined, size: 18),
-                    label: const Text('Ask AI Tutor'),
+                    icon: Icon(Icons.smart_toy_outlined, size: 18),
+                    label: Text('Ask AI Tutor'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                      padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
           ],
         ),
       ),
